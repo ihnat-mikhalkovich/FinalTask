@@ -1,10 +1,13 @@
 package com.epam.final_task.entity;
 
-public enum UserRoleEnum {
+import java.io.Serializable;
+
+public enum UserRoleEnum implements Serializable {
 
     ADMINISTRATOR("administrator"),
     MODERATOR("moderator"),
     USER("user"),
+    BANNED("banned"),
     GUEST("guest");
 
     private String name;
@@ -16,4 +19,5 @@ public enum UserRoleEnum {
     public String getName() {
         return name;
     }
+
 }

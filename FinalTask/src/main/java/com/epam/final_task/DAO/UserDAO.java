@@ -1,27 +1,35 @@
-package com.epam.final_task.DAO;
+package com.epam.final_task.dao;
 
-import com.epam.final_task.entity.User;
-import com.epam.final_task.entity.UserRoleEnum;
-
-import java.util.List;
+import com.epam.final_task.entity.*;
+import com.epam.final_task.exception.DAOException;
 
 public interface UserDAO {
 
-    boolean isUserInit(String email);
+    void addUser(User user, String password) throws DAOException;
 
-    void addUser(User user, String password);
+    User getUser(int userId) throws DAOException;
 
-    User getUser(String email);
+    UserPage getUserPage(int pageNumber, UserOrderBy orderBy) throws DAOException;
 
-    List<User> getAllUsers();
+    boolean userVerification(String email, String password) throws DAOException;
 
-    boolean checkUser(String email, String password);
-
-    boolean changeUserPassword(String email, String oldPassword, String newPassword);
-
-    default UserRoleEnum getRole(String email) {
-        User user = getUser(email);
+    default UserRoleEnum getRole(int userId) throws DAOException {
+        User user = getUser(userId);
         return user.getRole();
     }
+
+    void editUser(User user) throws DAOException;
+
+    int getUserId(String email) throws DAOException;
+
+    void changePassword(int userId, String newPassword) throws DAOException;
+
+    void checkDiscount(int userId) throws DAOException;
+
+    void raiseBalance(int userId, double raise) throws DAOException;
+
+    double getUserBalance(int userId) throws DAOException;
+
+    void banUser(int userId) throws DAOException;
 
 }

@@ -1,41 +1,65 @@
-package com.epam.final_task.DAO.connection_pool;
+package com.epam.final_task.dao.connection_pool;
 
-import com.epam.final_task.Exception.ConnectionPoolException;
-import com.epam.final_task.entity.User;
+import com.epam.final_task.exception.ConnectionPoolException;
+import org.apache.log4j.Logger;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
 
+/**
+ * Class {@code ConnectionPool} need for optimize getting connection to database.
+ * @author Ihnat Mikhalkovich\
+ * @since 1.0
+ */
 public class ConnectionPool {
 
-    public static final ConnectionPool instance = new ConnectionPool();
-
+    /**
+     * Static variable {@code instance} of type {@code ConnectionPool}.
+     */
+    private static final ConnectionPool instance = new ConnectionPool();
+    private final static Logger log = Logger.getLogger(ConnectionPool.class);
+    /**
+     * Define variable for default size of {@code connectionQueue}.
+     *
+     * @see #connectionQueue
+     */
+    private final int DEFAULT_POOL_SIZE = 5;
+    /**
+     * Define the queue of all connections.
+     */
     private BlockingQueue<Connection> connectionQueue;
-
+    /**
+     * Define the queue of all given away connections.
+     */
     private BlockingQueue<Connection> givenAwayConQueue;
-
+    /**
+     * Define variable for name of driver.
+     */
     private String driverName;
-
+    /**
+     * Define variable for url of database.
+     */
     private String url;
-
+    /**
+     * Define variable for username from database.
+     */
     private String user;
-
+    /**
+     * Define variable for username password from database.
+     */
     private String password;
-
+    /**
+     * Define variable for size of {@code connectionQueue}.
+     *
+     * @see #connectionQueue
+     */
     private int poolSize;
 
-    private final int DEFAULT_POOL_SIZE = 5;
-
-    public static ConnectionPool getInstance() {
-        return instance;
-    }
-
+    /** Don't let anyone else instantiate this class */
     private ConnectionPool() {
         DBResourceManager dbResourceManager = DBResourceManager.getInstance();
         this.driverName = dbResourceManager.getValue(DBParameter.DB_DRIVER);
@@ -50,8 +74,17 @@ public class ConnectionPool {
         try {
             initPoolData();
         } catch (ConnectionPoolException e) {
-            e.printStackTrace();
+            log.warn("Calling a method initPoolData() in constructor threw an exception.", e);
         }
+    }
+
+    /**
+     * Most of the methods of class {@code ConnectionPool} are instance
+     * methods and must be invoked with respect to the current runtime object.
+     * @return the {@code ConnectionPool} object associated with the current Java application.
+     */
+    public static ConnectionPool getInstance() {
+        return instance;
     }
 
     public void initPoolData() throws ConnectionPoolException {
@@ -71,6 +104,10 @@ public class ConnectionPool {
         }
     }
 
+    /**
+     * Close all connections from {@code givenAwayConQueue}.
+     * @see #givenAwayConQueue
+     */
     public void dispose() {
         clearConnectionQueue();
     }
@@ -79,10 +116,18 @@ public class ConnectionPool {
         try {
             closeConnectionQueue(givenAwayConQueue);
         } catch (SQLException e) {
-            //log
+            log.error("Error closing the connection.", e);
         }
     }
 
+    /**
+     * Allows you to take a connection from the {@code connectionQueue}. The connection is transferred to the {@code givenAwayConQueue}.
+     * @see #connectionQueue
+     * @see #givenAwayConQueue
+     * @return the connection to the database.
+     * @throws  ConnectionPoolException
+     *          If you receive a connection error to the data source.
+     */
     public Connection takeConnection() throws ConnectionPoolException {
         Connection connection = null;
         try {
@@ -94,37 +139,105 @@ public class ConnectionPool {
         return connection;
     }
 
-    public void closeConnection(Connection con, Statement st, ResultSet rs) {
-        try {
-            con.close();
-        } catch (SQLException e) {
-            //log
+    /**
+     * Calls the close() method of the input parameter.
+     * @param connection instance of class Connection.
+     * @param statement instance of class Statement.
+     * @param resultSet instance of class ResultSet.
+     * @see Connection
+     * @see Statement
+     * @see ResultSet
+     */
+    public void closeConnection(Connection connection, Statement statement, ResultSet resultSet) {
+        if (resultSet != null) {
+            closeResultSet(resultSet);
         }
-
-        try {
-            rs.close();
-        } catch (SQLException e) {
-            //log
+        if (statement != null) {
+            closeStatement(statement);
         }
-
-        try {
-            st.close();
-        } catch (SQLException e) {
-            //log
+        if (connection != null) {
+            closeConnection(connection);
         }
     }
 
-    public void closeConnection(Connection con, Statement st) {
-        try {
-            con.close();
-        } catch (SQLException e) {
-            //log
+    /**
+     * Calls the close() method of the input parameter.
+     * @param connection instance of class Connection.
+     * @param statement instance of class Statement.
+     * @see Connection
+     * @see Statement
+     */
+    public void closeConnection(Connection connection, Statement statement) {
+        if (statement != null) {
+            closeStatement(statement);
         }
+        if (connection != null) {
+            closeConnection(connection);
+        }
+    }
 
+    /**
+     * Calls the close() method of the input parameter.
+     * @param connection instance of class Connection.
+     * @param statements instances of class Statement.
+     * @see Connection
+     * @see Statement
+     */
+    public void closeConnection(Connection connection, Statement... statements) {
+        for (Statement statement : statements) {
+            if (statement != null) {
+                closeStatement(statement);
+            }
+        }
+        if (connection != null) {
+            closeConnection(connection);
+        }
+    }
+
+    /**
+     * Calls the close() method of the input parameter.
+     * @param connection instance of class Connection.
+     * @param resultSet instance of class ResultSet.
+     * @param statements instances of class Statement.
+     * @see Connection
+     * @see ResultSet
+     * @see Statement
+     */
+    public void closeConnection(Connection connection , ResultSet resultSet, Statement... statements) {
+        for (Statement statement : statements) {
+            if (statement != null) {
+                closeStatement(statement);
+            }
+        }
+        if (resultSet != null) {
+            closeResultSet(resultSet);
+        }
+        if (connection != null) {
+            closeConnection(connection);
+        }
+    }
+
+    private void closeStatement(Statement statement) {
         try {
-            st.close();
+            statement.close();
         } catch (SQLException e) {
-            //log
+            log.error("The statement was not closed.", e);
+        }
+    }
+
+    private void closeResultSet(ResultSet resultSet) {
+        try {
+            resultSet.close();
+        } catch (SQLException e) {
+            log.error("The statement was not closed.", e);
+        }
+    }
+
+    private void closeConnection(Connection connection) {
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            log.error("The connection was not closed.", e);
         }
     }
 
@@ -138,6 +251,10 @@ public class ConnectionPool {
         }
     }
 
+    /**
+     * The inner class that is the implementation of the interface Connection.
+     * @see Connection
+     */
     private class PooledConnection implements Connection {
 
         private Connection connection;
@@ -196,13 +313,13 @@ public class ConnectionPool {
         }
 
         @Override
-        public void setAutoCommit(boolean autoCommit) throws SQLException {
-            connection.setAutoCommit(autoCommit);
+        public boolean getAutoCommit() throws SQLException {
+            return connection.getAutoCommit();
         }
 
         @Override
-        public boolean getAutoCommit() throws SQLException {
-            return connection.getAutoCommit();
+        public void setAutoCommit(boolean autoCommit) throws SQLException {
+            connection.setAutoCommit(autoCommit);
         }
 
         @Override
@@ -226,18 +343,13 @@ public class ConnectionPool {
         }
 
         @Override
-        public void setReadOnly(boolean readOnly) throws SQLException {
-            connection.setReadOnly(readOnly);
-        }
-
-        @Override
         public boolean isReadOnly() throws SQLException {
             return connection.isReadOnly();
         }
 
         @Override
-        public void setCatalog(String catalog) throws SQLException {
-            connection.setCatalog(catalog);
+        public void setReadOnly(boolean readOnly) throws SQLException {
+            connection.setReadOnly(readOnly);
         }
 
         @Override
@@ -246,13 +358,18 @@ public class ConnectionPool {
         }
 
         @Override
-        public void setTransactionIsolation(int level) throws SQLException {
-            connection.setTransactionIsolation(level);
+        public void setCatalog(String catalog) throws SQLException {
+            connection.setCatalog(catalog);
         }
 
         @Override
         public int getTransactionIsolation() throws SQLException {
             return connection.getTransactionIsolation();
+        }
+
+        @Override
+        public void setTransactionIsolation(int level) throws SQLException {
+            connection.setTransactionIsolation(level);
         }
 
         @Override
@@ -286,13 +403,13 @@ public class ConnectionPool {
         }
 
         @Override
-        public void setHoldability(int holdability) throws SQLException {
-            connection.setHoldability(holdability);
+        public int getHoldability() throws SQLException {
+            return connection.getHoldability();
         }
 
         @Override
-        public int getHoldability() throws SQLException {
-            return connection.getHoldability();
+        public void setHoldability(int holdability) throws SQLException {
+            connection.setHoldability(holdability);
         }
 
         @Override
@@ -376,11 +493,6 @@ public class ConnectionPool {
         }
 
         @Override
-        public void setClientInfo(Properties properties) throws SQLClientInfoException {
-            connection.setClientInfo(properties);
-        }
-
-        @Override
         public String getClientInfo(String name) throws SQLException {
             return connection.getClientInfo(name);
         }
@@ -388,6 +500,11 @@ public class ConnectionPool {
         @Override
         public Properties getClientInfo() throws SQLException {
             return connection.getClientInfo();
+        }
+
+        @Override
+        public void setClientInfo(Properties properties) throws SQLClientInfoException {
+            connection.setClientInfo(properties);
         }
 
         @Override
@@ -401,13 +518,13 @@ public class ConnectionPool {
         }
 
         @Override
-        public void setSchema(String schema) throws SQLException {
-            connection.setSchema(schema);
+        public String getSchema() throws SQLException {
+            return connection.getSchema();
         }
 
         @Override
-        public String getSchema() throws SQLException {
-            return connection.getSchema();
+        public void setSchema(String schema) throws SQLException {
+            connection.setSchema(schema);
         }
 
         @Override
@@ -433,28 +550,6 @@ public class ConnectionPool {
         @Override
         public boolean isWrapperFor(Class<?> iface) throws SQLException {
             return connection.isWrapperFor(iface);
-        }
-    }
-
-    public static void main(String[] args) throws ConnectionPoolException, SQLException {
-        ConnectionPool connectionPool = new ConnectionPool();
-        connectionPool.initPoolData();
-        Connection connection = connectionPool.takeConnection();
-        String usersQuery = "select * from users";
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery(usersQuery);
-        List<User> users = new ArrayList<>();
-//        while (resultSet.next()) {
-//            String firstName = resultSet.getString("first_name");
-//            String lastName = resultSet.getString("last_name");
-//            String password = resultSet.getString("password");
-//            String tel = resultSet.getString("telephone_number");
-//            String email = resultSet.getString("email");
-//            User user = new User(firstName, lastName, password, tel, email);
-//            users.add(user);
-//        }
-        for (User user : users) {
-            System.out.println(user);
         }
     }
 

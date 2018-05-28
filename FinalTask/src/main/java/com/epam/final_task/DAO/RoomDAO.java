@@ -1,41 +1,53 @@
-package com.epam.final_task.DAO;
+package com.epam.final_task.dao;
 
+import com.epam.final_task.exception.DAOException;
 import com.epam.final_task.entity.*;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 public interface RoomDAO {
 
-    void addRoom(ExtendedRoom room);
+    void addRoom(ExtendedRoom room) throws DAOException;
 
-    Room getRoom(int roomId, LanguageEnum language);
+    Room getRoom(int roomId, LanguageEnum language) throws DAOException;
 
-    ExtendedRoom getExtendedRoom(int roomId);
+    ExtendedRoom getExtendedRoom(int roomId) throws DAOException;
 
-    List<Room> getEmptyRoomsInRange(Date arrival, Date departure, LanguageEnum language);
+    List<Room> getAllEmptyVisibleRoomsInRange(Date arrival, Date departure, LanguageEnum language) throws DAOException;
 
-    default List<Room> getEmptyRoomsInRange(DateRange range, LanguageEnum language) {
-        return getEmptyRoomsInRange(range.getArrival(), range.getDeparture(), language);
+    default List<Room> getAllEmptyVisibleRoomsInRange(DateRange range, LanguageEnum language) throws DAOException {
+        return getAllEmptyVisibleRoomsInRange(range.getArrival(), range.getDeparture(), language);
     }
 
-    void hideRoom(int roomId);
+    List<Room> getVisibleRooms(LanguageEnum language) throws DAOException;
 
-    void visionRoom(int roomId);
+    List<Room> getAllRoomTypes(LanguageEnum language) throws DAOException;
 
-    void removeRoom(int roomId);
+    void editRoom(ExtendedRoom editedRoom) throws DAOException;
 
-    List<Room> getVisibleRooms(LanguageEnum language);
+    void userGetRooms(ReservedRoom room) throws DAOException;
 
-    List<Room> getAllRooms(LanguageEnum language);
+    void userReturnsRooms(int reservedRoomId) throws DAOException;
 
-    void editRoom(int roomId, ExtendedRoom newRoom);
+    UserHistoryPage getUserHistory(int userId, int pageNumber, LanguageEnum language) throws DAOException;
 
-    void userGetRooms(ReservedRoom room);
+    void roomPayment(int transactionId) throws DAOException;
 
-    void userReturnsRooms(int reservedRoomId);
+    void setApproval(int transactionId) throws DAOException;
 
-    List<ReservedRoom> getUserRooms(int id);
+    UserHistoryPage getAllApplications(int pageNumber, LanguageEnum language) throws DAOException;
+
+    List<RoomTariff> getAllRoomTariffs(LanguageEnum language) throws DAOException;
+
+    List<RoomTariff> getAllVisibleRoomTariffs(LanguageEnum language) throws DAOException;
+
+    void addRoomTariff(ExtendedRoomTariff tariff) throws DAOException;
+
+    void editTariff(ExtendedRoomTariff tariff) throws DAOException;
+
+    ExtendedRoomTariff getExtendedRoomTariff(int tariffId) throws DAOException;
+
+    boolean checkCancelNumber(int userId) throws DAOException;
 
 }

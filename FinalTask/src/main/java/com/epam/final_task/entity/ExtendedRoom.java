@@ -21,12 +21,14 @@ public class ExtendedRoom implements Serializable {
 
     private boolean visibility;
 
+    private int numberOfPersons;
+
     public ExtendedRoom() {
         name = new EnumMap<>(LanguageEnum.class);
         description = new EnumMap<>(LanguageEnum.class);
     }
 
-    public ExtendedRoom(int id, int roomsAmount, Map<LanguageEnum, String> name, double cost, String image, Map<LanguageEnum, String> description, boolean visibility) {
+    public ExtendedRoom(int id, int roomsAmount, Map<LanguageEnum, String> name, double cost, String image, Map<LanguageEnum, String> description, boolean visibility, int numberOfPersons) {
         this.id = id;
         this.roomsAmount = roomsAmount;
         this.name = name;
@@ -34,15 +36,17 @@ public class ExtendedRoom implements Serializable {
         this.image = image;
         this.description = description;
         this.visibility = visibility;
+        this.numberOfPersons = numberOfPersons;
     }
 
-    public ExtendedRoom(int roomsAmount, Map<LanguageEnum, String> name, double cost, String image, Map<LanguageEnum, String> description, boolean visibility) {
+    public ExtendedRoom(int roomsAmount, Map<LanguageEnum, String> name, double cost, String image, Map<LanguageEnum, String> description, boolean visibility, int numberOfPersons) {
         this.roomsAmount = roomsAmount;
         this.name = name;
         this.cost = cost;
         this.image = image;
         this.description = description;
         this.visibility = visibility;
+        this.numberOfPersons = numberOfPersons;
     }
 
     public int getId() {
@@ -101,23 +105,32 @@ public class ExtendedRoom implements Serializable {
         this.visibility = visibility;
     }
 
+    public int getNumberOfPersons() {
+        return numberOfPersons;
+    }
+
+    public void setNumberOfPersons(int numberOfPersons) {
+        this.numberOfPersons = numberOfPersons;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ExtendedRoom that = (ExtendedRoom) o;
-        return id == that.id &&
-                roomsAmount == that.roomsAmount &&
-                Double.compare(that.cost, cost) == 0 &&
-                visibility == that.visibility &&
-                Objects.equals(name, that.name) &&
-                Objects.equals(image, that.image) &&
-                Objects.equals(description, that.description);
+        ExtendedRoom room = (ExtendedRoom) o;
+        return id == room.id &&
+                roomsAmount == room.roomsAmount &&
+                Double.compare(room.cost, cost) == 0 &&
+                visibility == room.visibility &&
+                numberOfPersons == room.numberOfPersons &&
+                Objects.equals(name, room.name) &&
+                Objects.equals(image, room.image) &&
+                Objects.equals(description, room.description);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, roomsAmount, name, cost, image, description, visibility);
+        return Objects.hash(id, roomsAmount, name, cost, image, description, visibility, numberOfPersons);
     }
 
     @Override
@@ -130,6 +143,7 @@ public class ExtendedRoom implements Serializable {
                 ", image='" + image + '\'' +
                 ", description=" + description +
                 ", visibility=" + visibility +
+                ", numberOfPersons=" + numberOfPersons +
                 '}';
     }
 
